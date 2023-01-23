@@ -1,0 +1,25 @@
+model{
+	for(i in 1:m) {
+		# likelihood of observed data
+		sample_counts[i] ~ dbin(mu[i], n_i[i])
+		log_lik[i] <- log( dbin(sample_counts[i], mu[i], n_i[i]) )
+	}
+	for(i in 1:M) {
+		# draw non-sampled counts
+		nonsample_counts[i] ~ dbin(mu[i], N_i[i] - n_i[i])
+		logit(mu[i]) <- intercept_a + inprod(lambda_a, z_a[i,]) + Z_v[i] * sigma_v
+		
+		Z_v[i] ~ dnorm(0, 1)
+		
+		theta[i] = (sample_counts[i] + nonsample_counts[i])/N_i[i]
+	}
+	
+	# priors for fixed coefficients
+	for(j in 1:q_a) {
+		lambda_a[j] ~ dnorm(0, 0.25)
+	}
+	intercept_a ~ dt(0,1,3)
+	
+	# priors for random effects
+		sigma_v ~ dnorm(0,1)T(0,)
+}
