@@ -85,4 +85,29 @@ summ_or <- as.data.frame(y) %>%
          EP = 0.6573 + 0.1688 * sd,
          DPP = 2*abs(EP-0.5),
          DPP_sig = as.factor(ifelse(DPP > 0.6, 1, 0)))
-         
+
+## Generate sa4_summ ## -------------------------------------------------------
+
+S = matrix(c(199.5, 184.7, 121.4, 56.6, 67.9, 82.6, 
+             184.7, 174.5, 121.9, 54.5, 65.5, 84.5,
+             121.4, 121.9, 128.7, 35.1, 46.8, 83.3,
+             56.6, 54.4, 35.1, 51.2, 38.7, 55.0,
+             67.9, 65.5, 46.8, 38.7, 45.9, 61.5, 
+             82.6, 84.5, 83.3, 55.0, 61.5, 108.6),nrow=6)/100000
+y = mvrnorm(65,c(0.15691957, 0.15769829, 0.15512497, 0.04294622, 0.06100198, 0.09384463),S)
+y = ifelse(y < 0, 0.001, y)
+
+summ_mu_sa4 <- as.data.frame(y) %>% 
+  mutate(ps_sa4 = 1:65) %>% 
+  setNames(c("median_TSLN", "median_ELN", "median_LOG", "cisize_TSLN", "cisize_ELN", "cisize_LOG", "ps_sa4")) %>% 
+  pivot_longer(-ps_sa4, names_to = c("metric", "model"), names_sep = "_", values_to = "value") %>% 
+  pivot_wider(names_from = "metric", values_from = "value") %>% 
+  mutate(sd = (cisize/2)/1.96,
+         lower = median - (cisize/2),
+         upper = median + (cisize/2),
+         HT = exp(0.30292 + 1.198 * log(median)),
+         res = rnorm(65*3, 0.06736968, 0.02636784),
+         HT_lower = HT - res, HT_upper = HT + res,
+         RRMSE = exp(-2.15070 + 0.07933 * log(median)),
+         ARB = exp(-1.3766 + 0.1908 * log(median))) %>% 
+  dplyr::select(-res)

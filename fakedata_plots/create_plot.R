@@ -41,6 +41,50 @@ prev_median_wide <- dplyr::select(summ_mu, median, model, ps_area) %>%
 prev_ci_wide <- dplyr::select(summ_mu, cisize, model, ps_area) %>% 
 						pivot_wider(names_from = model, values_from = cisize)
 
+# SA4 level - HT vs modeled ####
+summ_mu_sa4 %>% 
+  ggplot(aes(y = median, ymin = lower, ymax = upper,
+             x = HT, xmin = HT_lower, xmax = HT_upper))+
+  theme_bw()+geom_abline(col="red")+
+  geom_errorbar(col = "grey")+geom_errorbarh(col = "grey")+
+  geom_point()+
+  facet_grid(model~.)+
+  labs(y = "Modelled prevalence estimate",
+       x = "Direct prevalence estimate")
+if(export) jsave("sa4_directvsmodeled.png", square = F)
+
+# SA4 level - ARB, RRMSE #### 
+(summ_mu_sa4 %>% 
+  dplyr::select(ps_sa4, RRMSE, model) %>% 
+  pivot_wider(names_from = model, values_from = RRMSE) %>% 
+  arrange(TSLN) %>% mutate(x = 1:nrow(.)) %>% dplyr::select(-ps_sa4) %>% 
+  pivot_longer(-x) %>% 
+  ggplot(aes(y = 10*value, x = x, color = name))+
+  theme_bw()+
+  geom_path()+geom_point()+
+  scale_color_manual(values = jcol$color,
+                    breaks = jcol$model)+
+  labs(y = "RRMSE (x10)", x = "", col = "")+
+  theme(legend.position = "bottom",
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank()))+
+(summ_mu_sa4 %>% 
+  dplyr::select(ps_sa4, ARB, model) %>% 
+  pivot_wider(names_from = model, values_from = ARB) %>% 
+  arrange(TSLN) %>% mutate(x = 1:nrow(.)) %>% dplyr::select(-ps_sa4) %>% 
+  pivot_longer(-x) %>% 
+  ggplot(aes(y = 10*value, x = x, color = name))+
+  theme_bw()+
+  geom_path()+
+  geom_point()+
+  scale_color_manual(values = jcol$color,
+                     breaks = jcol$model)+
+  labs(y = "ARB (x10)", x = "", col = "")+
+  theme(legend.position = "bottom",
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank()))
+if(export) jsave("sa4_rrmse_arb.png", square = F)
+
 # Violin plots ####
 summ_mu %>% 
   ggplot(aes(y = model, fill = model, x = median))+
