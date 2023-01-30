@@ -1,2 +1,10 @@
-# SEARCHING FOR STABILITY: INTRODUCING A TWO-STAGE METHOD OF SMALL AREA ESTIMATION FOR PROPORTIONS
-This is the github repository for the above paper. Due to privacy requirements, we are unable to share the code for the case study.
+# two_stage_saemodel_proportions
+
+This repository contains code for the analyses described in the manuscript "Searching for stability: Introducing a two-stage method of small area estimation for proportion" by James Hogg and others [[arXiv to come]].
+
+## Simulation experiment
+
+## Data
+
+## Results
+
