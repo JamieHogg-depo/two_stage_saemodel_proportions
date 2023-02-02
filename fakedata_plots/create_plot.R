@@ -4,8 +4,7 @@
 
 # Functions ### 
 base_folder <- "C:/r_proj/two_stage_saemodel_proportions/fakedata_plots"
-export <- T #FALSE
-HT_mu <- 0.147
+export <- F #FALSE
 
 jsave <- function(filename, square = T, square_size = 5000, ratio = c(6,9)){
   if(square){
@@ -48,42 +47,45 @@ summ_mu_sa4 %>%
   theme_bw()+geom_abline(col="red")+
   geom_errorbar(col = "grey")+geom_errorbarh(col = "grey")+
   geom_point()+
-  facet_grid(model~.)+
+  facet_grid(.~model)+
   labs(y = "Modelled prevalence estimate",
        x = "Direct prevalence estimate")
 if(export) jsave("sa4_directvsmodeled.png", square = F)
 
 # SA4 level - ARB, RRMSE #### 
 (summ_mu_sa4 %>% 
-  dplyr::select(ps_sa4, RRMSE, model) %>% 
+  dplyr::select(ps_sa4, n, RRMSE, model) %>% 
   pivot_wider(names_from = model, values_from = RRMSE) %>% 
   arrange(TSLN) %>% mutate(x = 1:nrow(.)) %>% dplyr::select(-ps_sa4) %>% 
-  pivot_longer(-x) %>% 
+  pivot_longer(-c(x, n)) %>% 
   ggplot(aes(y = 10*value, x = x, color = name))+
   theme_bw()+
-  geom_path()+geom_point()+
+  geom_path()+geom_point(aes(size = n))+
   scale_color_manual(values = jcol$color,
                     breaks = jcol$model)+
-  labs(y = "RRMSE (x10)", x = "", col = "")+
+  labs(y = "RRMSE (x10)", x = "", col = "",
+       size = "Sample size")+
   theme(legend.position = "bottom",
-        axis.text.x=element_blank(),
-        axis.ticks.x=element_blank()))+
+        legend.box = "vertical")+
+   scale_size_binned(n.breaks = 5))+
 (summ_mu_sa4 %>% 
-  dplyr::select(ps_sa4, ARB, model) %>% 
+  dplyr::select(ps_sa4, n, ARB, model) %>% 
   pivot_wider(names_from = model, values_from = ARB) %>% 
   arrange(TSLN) %>% mutate(x = 1:nrow(.)) %>% dplyr::select(-ps_sa4) %>% 
-  pivot_longer(-x) %>% 
+  pivot_longer(-c(x, n)) %>% 
   ggplot(aes(y = 10*value, x = x, color = name))+
   theme_bw()+
-  geom_path()+
-  geom_point()+
+  geom_path()+geom_point(aes(size = n))+
   scale_color_manual(values = jcol$color,
                      breaks = jcol$model)+
-  labs(y = "ARB (x10)", x = "", col = "")+
+  labs(y = "ARB (x10)", x = "", col = "",
+       size = "Sample size")+
   theme(legend.position = "bottom",
-        axis.text.x=element_blank(),
-        axis.ticks.x=element_blank()))
+        legend.box = "vertical")+
+   scale_size_binned(n.breaks = 5))
 if(export) jsave("sa4_rrmse_arb.png", square = F)
+
+# What about relative measures??
 
 # Violin plots ####
 summ_mu %>% 
@@ -97,22 +99,43 @@ summ_mu %>%
                     breaks = jcol$model)
 if(export) jsave("violin.png", square = F)
 
-# Boxplot of posterior medians ####
+# Boxplot of posterior medians - IRSD ####
 prev_median_wide %>%
   left_join(.,dplyr::select(aux2, ps_area, ABS_irsd_decile_nation, ra_sa2_3c, N_persons),
 				by = "ps_area") %>%
 	pivot_longer(-c(ps_area, ABS_irsd_decile_nation, ra_sa2_3c, N_persons)) %>%
+  # rename IRSD categories
+  mutate(ABS_irsd_decile_nation = factor(ABS_irsd_decile_nation, levels = 1:10,
+                                         labels = c("Least advantaged", 
+                                                    as.character(2:9), 
+                                                    "Most advantaged"))) %>% 
 	ggplot(aes(x = value, fill = name, y = ABS_irsd_decile_nation))+
 	theme_bw()+
 	geom_boxplot()+
-	facet_grid(.~ra_sa2_3c, labeller = label_wrap_gen(multi_line = TRUE))+
   labs(x = "Modeled prevalence estimate",
-       y = "IRSD categories",
+       y = "IRSD deciles",
        fill = "")+
   theme(legend.position = "bottom")+
   scale_fill_manual(values = jcol$color,
                     breaks = jcol$model)
-if(export) jsave("boxplot_byseifa.png", square = F)	
+if(export) jsave("boxplot_byseifa.png", square = F)
+
+# Boxplot of posterior medians - Remoteness ####
+prev_median_wide %>%
+  left_join(.,dplyr::select(aux2, ps_area, ABS_irsd_decile_nation, ra_sa2_3c, N_persons),
+            by = "ps_area") %>%
+  pivot_longer(-c(ps_area, ABS_irsd_decile_nation, ra_sa2_3c, N_persons)) %>%
+  ggplot(aes(x = value, fill = name, y = ra_sa2_3c))+
+  theme_bw()+
+  geom_boxplot()+
+  #facet_grid(.~ra_sa2_3c, labeller = label_wrap_gen(multi_line = TRUE))+
+  labs(x = "Modeled prevalence estimate",
+       y = "",
+       fill = "")+
+  theme(legend.position = "bottom")+
+  scale_fill_manual(values = jcol$color,
+                    breaks = jcol$model)
+if(export) jsave("boxplot_byremoteness.png", square = F)
 
 # Compare estimates from models ####
 dplyr::select(summ_mu, median, lower, upper, model, ps_area) %>% 
@@ -123,10 +146,10 @@ dplyr::select(summ_mu, median, lower, upper, model, ps_area) %>%
   geom_abline(col = "red")+
   geom_errorbar(col="grey")+
   geom_errorbarh(col="grey")+
-  geom_point()+
+  geom_point()+xlim(0,0.5)+ylim(0,0.5)+
   labs(y = "TSLN model",
        x = "ELN model")
-if(export) jsave("scatter_TSLNvsELN.png", square = F)
+if(export) jsave("scatter_TSLNvsELN.png", square = T)
 
 dplyr::select(summ_mu, median, lower, upper, model, ps_area) %>% 
   pivot_wider(names_from = model, values_from = c(median, lower, upper)) %>% 
@@ -136,68 +159,44 @@ dplyr::select(summ_mu, median, lower, upper, model, ps_area) %>%
   geom_abline(col = "red")+
   geom_errorbar(col="grey")+
   geom_errorbarh(col="grey")+
-  geom_point()+
+  geom_point()+xlim(0,0.5)+ylim(0,0.5)+
   labs(y = "TSLN model",
        x = "LOG model")
-if(export) jsave("scatter_TSLNvsLOG.png", square = F)
+if(export) jsave("scatter_TSLNvsLOG.png", square = T)
+
+dplyr::select(summ_mu, median, lower, upper, model, ps_area) %>% 
+  pivot_wider(names_from = model, values_from = c(median, lower, upper)) %>% 
+  ggplot(aes(y = median_ELN, ymin = lower_ELN, ymax = upper_ELN,
+             x = median_LOG, xmin = lower_LOG, xmax = upper_LOG))+
+  theme_bw()+
+  geom_abline(col = "red")+
+  geom_errorbar(col="grey")+
+  geom_errorbarh(col="grey")+
+  geom_point()+xlim(0,0.5)+ylim(0,0.5)+
+  labs(y = "ELN model",
+       x = "LOG model")
+if(export) jsave("scatter_ELNvsLOG.png", square = T)
 
 # Caterpillar plots - by model - with CI  #### ---------------------------------
 
 # Prevalence
-rank_areas <- summ_mu %>% 
-  filter(model == "TSLN") %>% 
-  arrange(median) %>% 
-  mutate(rank = 1:nrow(.)) %>% 
-  dplyr::select(ps_area,  rank)
-
 summ_mu %>% 
-  left_join(.,rank_areas, by = "ps_area") %>% 
+  group_by(model) %>% 
+  mutate(rank = rank(median, ties.method = "first")) %>%
   ggplot(aes(y = median, ymin = lower, ymax = upper,
              x = rank, 
-             col = model))+theme_bw()+
+             col = median))+theme_bw()+
   geom_errorbar(col = "grey")+
   geom_point()+
   facet_wrap(.~model)+
-  scale_color_manual(values = jcol$color,
-                    breaks = jcol$model)+
+  scale_color_viridis_c(begin = 0.3, end = 1, 
+                        direction = 1,
+                        option = "B")+
   geom_hline(yintercept = HT_mu)+
   labs(y = "Modeled prevalence estimates",
        x = "")+
-  theme(legend.position = "none",
-        axis.text.x=element_blank(),
-        axis.ticks.x=element_blank())
+  theme(legend.position = "none")
 if(export) jsave("cat_prev_medianci.png", square = F)
-
-# ORs
-rank_areas <- summ_or %>% 
-  filter(model == "TSLN") %>% 
-  arrange(median) %>% 
-  mutate(rank = 1:nrow(.)) %>% 
-  dplyr::select(ps_area,  rank)
-
-summ_or %>% 
-  left_join(.,rank_areas, by = "ps_area") %>% 
-  ggplot(aes(y = median, ymin = lower, ymax = upper,
-             x = rank, 
-             col = DPP))+
-  theme_bw()+
-  geom_errorbar(col = "grey")+
-  geom_point()+
-  facet_wrap(.~model)+
-  scale_color_viridis_c(begin = 0, end = 0.8, 
-                       option = "C", 
-                       limits = c(0.5,1), oob = squish)+
-  geom_hline(yintercept = 1)+
-  labs(y = "ORs",
-       x = "", 
-       color = "DPP")+
-  theme(legend.position = "bottom", legend.key.width = unit(2, "cm"),
-        axis.text.x=element_blank(),
-        axis.ticks.x=element_blank())+
-  scale_y_continuous(trans = log_trans(),
-                     breaks = c(1/2.5, 1/2, 1/1.5, 1/1.25, 1, 1.25, 1.5, 2, 2.5),
-                     limits = c(1/3, 3))
-if(export) jsave("cat_or_medianci.png", square = F)
 
 # Caterpillar plots - by population #### ---------------------------------------
 
@@ -286,6 +285,10 @@ lims <- data.frame(
     # size of CI (right)
     # grid for three models (along y axis)
 
+direct_est <- sample_agg %>% 
+  dplyr::select(ps_area, HT, cisize) %>% 
+  rename(median = HT) %>% 
+  mutate(model = "Direct")
 mapping_data <- summ_mu %>%
   bind_rows(direct_est) %>% 
   left_join(.,map_sa2, by = "ps_area") %>%
@@ -310,7 +313,9 @@ mapping_data <- summ_mu %>%
     theme_void()+
     geom_sf(col = NA)+
     facet_grid(.~model)+
-    scale_fill_viridis_c(begin = 0, end = 0.8, option = "D")+
+    scale_fill_viridis_c(begin = 0, end = 0.8, 
+                         direction = -1,
+                         option = "D")+
     labs(fill = "HDI size")+
     theme(legend.position = "right", legend.key.height = unit(0.5, "cm"),
           strip.background = element_blank(),
@@ -338,7 +343,14 @@ for(i in 1:nrow(cities)){
 
 # SETUP
 cut_offs <- c(1/1.5, 1.5)
+direct_est <- sample_agg %>% 
+  dplyr::select(ps_area, OR, OR_lower, OR_upper) %>% 
+  rename(median = OR) %>% 
+  mutate(model = "Direct",
+         cisize = OR_upper - OR_lower) %>% 
+  dplyr::select(-c(OR_lower, OR_upper))
 mapping_data <- summ_or %>%
+  bind_rows(direct_est) %>% 
 	left_join(.,map_sa2, by = "ps_area") %>%
 	st_as_sf() %>%
 	st_transform(4326) %>%
@@ -371,36 +383,44 @@ bm_orci <- mapping_data %>%
 	theme_void()+
 	geom_sf(col = NA)+
 	facet_grid(.~model)+
-  scale_fill_viridis_c(begin = 0, end = 0.8, option = "D")+
+  scale_fill_viridis_c(begin = 0, end = 0.8, 
+                       direction = -1,
+                       option = "D")+
   labs(fill = "HDI size")+
   theme(legend.position = "right", legend.key.height = unit(0.4, "cm"),
         strip.background = element_blank(),
         strip.text.x = element_blank())
 
-# Maps: DPPs for ORs #### ----------------------------------------------
+# Maps: EPs for ORs #### ----------------------------------------------
 
 # SETUP
 mapping_data <- summ_or %>%
+  bind_rows(data.frame(model = "Direct", ps_area = 1:1695)) %>% 
 	left_join(.,map_sa2, by = "ps_area") %>%
 	st_as_sf() %>%
 	st_transform(4326)
 	
-# Create base map for DPPs
-(bm_dpp <- mapping_data %>%
-	ggplot(aes(fill = DPP))+
+# Create base map for EPs
+(bm_ep <- mapping_data %>%
+	ggplot(aes(fill = EP))+
 	theme_void()+
 	geom_sf(col = NA)+
 	facet_grid(.~model)+
-  scale_fill_viridis_c(begin = 0, end = 0.8, 
+  scale_fill_viridis_c(begin = 0, end = 0.8,
+                       direction = -1,
                        option = "C", 
-                       limits = c(0.5,1), oob = squish)+
-	labs(fill = "DPP")+
+                       limits = c(0.01,0.99),
+                       #oob = squish,
+                       breaks = c(0,0.2,0.5,0.8,1),
+                       labels = as.character(c(0,0.2,0.5,0.8,1)),
+                       trans = "logit")+
+	labs(fill = "EP")+
 	theme(legend.position = "right", legend.key.height = unit(0.4, "cm"),
 	      strip.background = element_blank(),
 	      strip.text.x = element_blank()))
 	
 # Export full maps
-bm_or/bm_orci/bm_dpp
+bm_or/bm_ep/bm_orci
 if(export) jsave("map_or.png")
 
 # Subset to capital cities
@@ -413,10 +433,10 @@ for(i in 1:nrow(cities)){
   orci <- bm_orci +
     xlim(cities$xmin[i], cities$xmax[i]) +
     ylim(cities$ymin[i], cities$ymax[i])
-  ordpp <- bm_dpp +
+  orep <- bm_ep +
     xlim(cities$xmin[i], cities$xmax[i]) +
     ylim(cities$ymin[i], cities$ymax[i])
-  (or/orci/ordpp)
+  (or/orep/orci)
   jsave(paste0("map_insets/map_or_", cities$city[i], ".png"), square = F)
 }
 

@@ -8,6 +8,7 @@ library(MASS)
 library(patchwork)
 library(readr)
 library(readxl)
+HT_mu <- 0.147
 
 # Load map
 map_sa2 <- st_read("~/OneDrive - Queensland University of Technology/DataLab/Requested file load/2016/2016_SA2_Shape_min/2016_SA2_Shape_min.shp") %>%  
@@ -60,11 +61,15 @@ summ_mu <- as.data.frame(y) %>%
 
 sample_agg <- data.frame(ps_area = 1:1695,
                          HT = exp(0.2733 + 1.9373 * log(summ_mu[summ_mu$model == "TSLN",]$median))) %>% 
-  mutate(HT = ifelse(ps_area %in% sample(1695, 0.6*1695), HT, NA))
-direct_est <- sample_agg %>% 
-  rename(median = HT) %>% 
-  mutate(cisize = 2*1.96*exp(-0.80212 + 0.70103 * log(median)),
-         model = "Direct")
+  mutate(HT = ifelse(ps_area %in% sample(1695, 0.6*1695), HT, NA),
+         HT_SE = exp(-0.80212 + 0.70103 * log(HT)),
+         HT_lower = HT - 1.96*HT_SE,
+         HT_upper = HT + 1.96*HT_SE,
+         OR = (HT/(1-HT))/(HT_mu/(1-HT_mu)),
+         OR_lower = (HT_lower/(1-HT_lower))/(HT_mu/(1-HT_mu)),
+         OR_lower = ifelse(OR_lower < 0, 0.01, OR_lower),
+         OR_upper = (HT_upper/(1-HT_upper))/(HT_mu/(1-HT_mu)),
+         cisize = 2*1.96*HT_SE)
 
 ## Generate summ_or ## ---------------------------------------------------------
 
@@ -82,7 +87,7 @@ summ_or <- as.data.frame(y) %>%
          cisize = exp(0.1799 + 0.9638 * log(median)),
          lower = median - (cisize/2),
          upper = median + (cisize/2),
-         EP = 0.6573 + 0.1688 * sd,
+         EP = runif(nrow(.), 0.01, 0.99),
          DPP = 2*abs(EP-0.5),
          DPP_sig = as.factor(ifelse(DPP > 0.6, 1, 0)))
 
@@ -98,9 +103,10 @@ y = mvrnorm(65,c(0.15691957, 0.15769829, 0.15512497, 0.04294622, 0.06100198, 0.0
 y = ifelse(y < 0, 0.001, y)
 
 summ_mu_sa4 <- as.data.frame(y) %>% 
-  mutate(ps_sa4 = 1:65) %>% 
-  setNames(c("median_TSLN", "median_ELN", "median_LOG", "cisize_TSLN", "cisize_ELN", "cisize_LOG", "ps_sa4")) %>% 
-  pivot_longer(-ps_sa4, names_to = c("metric", "model"), names_sep = "_", values_to = "value") %>% 
+  mutate(ps_sa4 = 1:65,
+         n = round(exp(rnorm(65, 4.94, 0.589)))) %>% 
+  setNames(c("median_TSLN", "median_ELN", "median_LOG", "cisize_TSLN", "cisize_ELN", "cisize_LOG", "ps_sa4", "n")) %>% 
+  pivot_longer(-c(ps_sa4, n), names_to = c("metric", "model"), names_sep = "_", values_to = "value") %>% 
   pivot_wider(names_from = "metric", values_from = "value") %>% 
   mutate(sd = (cisize/2)/1.96,
          lower = median - (cisize/2),
