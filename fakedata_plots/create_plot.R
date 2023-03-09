@@ -441,6 +441,24 @@ for(i in 1:nrow(cities)){
 }
 
 ## ----------------------------------------------------------------------------
+#' @param sub_cities example `cities[cities$city == "Sydney",]`
+#' @param map example is `map_sa2`
+#' @returns Logical vector of length equal to `nrow(map)`
+getIndicesInSubset <- function(sub_cities, map){
+  area_of_interest <- with(sub_cities, 
+                           matrix(c(xmin, ymin,
+                                    xmax, ymin, 
+                                    xmax, ymax,
+                                    xmin, ymax,
+                                    xmin, ymin), 
+                                  byrow = T, ncol = 2)) %>% 
+    list() %>% 
+    st_polygon()
+  
+  st_contains(area_of_interest, map, sparse = F) %>% t() %>% c() 
+}
+
+## ----------------------------------------------------------------------------
 ## Alterntaive #### -----------------------------------------------------------
 ## ----------------------------------------------------------------------------
 
