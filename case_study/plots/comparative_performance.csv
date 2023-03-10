@@ -1,0 +1,7 @@
+﻿type,model,MRRMSE,MARB,cisize,coverage,overlap1,overlap2
+Benchmarked,ELN,0.29,0.24,0.06,0.68,0.79,0.78
+Benchmarked,LOG,0.35,0.27,0.09,0.83,0.75,0.73
+Benchmarked,TSLN,0.29,0.26,0.04,0.48,0.83,0.80
+Not benchmarked,ELN,0.35,0.30,0.07,0.66,0.77,0.72
+Not benchmarked,LOG,0.55,0.28,0.22,0.98,0.56,0.52
+Not benchmarked,TSLN,0.29,0.25,0.05,0.55,0.76,0.75
