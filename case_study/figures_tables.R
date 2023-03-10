@@ -231,7 +231,7 @@ dplyr::select(b_est$summ_mu, median, lower, upper, model, ps_area) %>%
   pivot_wider(names_from = model, values_from = c(median, lower, upper)) %>% 
   ggplot(aes(y = median_TSLN, ymin = lower_TSLN, ymax = upper_TSLN,
              x = median_ELN, xmin = lower_ELN, xmax = upper_ELN))+
-  theme_bw()+
+  theme_bw(base_size = 20)+
   geom_abline(col = "red")+
   geom_errorbar(col="grey")+
   geom_errorbarh(col="grey")+
@@ -245,7 +245,7 @@ dplyr::select(b_est$summ_mu, median, lower, upper, model, ps_area) %>%
   pivot_wider(names_from = model, values_from = c(median, lower, upper)) %>% 
   ggplot(aes(y = median_TSLN, ymin = lower_TSLN, ymax = upper_TSLN,
              x = median_LOG, xmin = lower_LOG, xmax = upper_LOG))+
-  theme_bw()+
+  theme_bw(base_size = 20)+
   geom_abline(col = "red")+
   geom_errorbar(col="grey")+
   geom_errorbarh(col="grey")+
@@ -259,7 +259,7 @@ dplyr::select(b_est$summ_mu, median, lower, upper, model, ps_area) %>%
   pivot_wider(names_from = model, values_from = c(median, lower, upper)) %>% 
   ggplot(aes(y = median_ELN, ymin = lower_ELN, ymax = upper_ELN,
              x = median_LOG, xmin = lower_LOG, xmax = upper_LOG))+
-  theme_bw()+
+  theme_bw(base_size = 20)+
   geom_abline(col = "red")+
   geom_errorbar(col="grey")+
   geom_errorbarh(col="grey")+
