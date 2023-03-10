@@ -304,6 +304,10 @@ lims <- data.frame(
 # size of CI (right)
 # grid for three models (along y axis)
 
+'NOTE: Very uncertain and large prevalence values are for the very top of Australia.
+These areas are all remote or very remote.
+ps_area: 1507 1566 1567 1569 1570 1572 1573 1575 1596'
+
 direct_est <- sample_agg %>% 
   dplyr::select(ps_area, HT, cisize) %>% 
   rename(median = HT) %>% 
