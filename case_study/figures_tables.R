@@ -60,6 +60,14 @@ map_sa2 <- st_read("C:/r_proj/two_stage_saemodel_proportions/data/2016_SA2_Shape
   filter(STATE_CODE %in% c("8", "1", "3", "2")) %>% 
   mutate(SA2 = as.numeric(SA2_MAIN16)) %>% 
   left_join(.,b_est$area_concor, by = "SA2")
+  
+# get overlap
+state_overlay <- map_sa2 %>% 
+  group_by(state) %>% 
+  summarise(geometry = st_union(geometry)) %>% 
+  filter(!is.na(state)) %>% 
+  st_as_sf() %>%
+  st_transform(4326)
 
 # Load remoteness
 ra1 <- read_csv("C:/r_proj/two_stage_saemodel_proportions/data/aust_ASGS2016_sa2_detls.csv") %>% dplyr::select(-1)
@@ -233,6 +241,8 @@ dplyr::select(b_est$summ_mu, median, lower, upper, model, ps_area) %>%
              x = median_ELN, xmin = lower_ELN, xmax = upper_ELN))+
   theme_bw(base_size = 20)+
   geom_abline(col = "red")+
+  geom_hline(yintercept = HT_mu)+
+  geom_vline(xintercept = HT_mu)+
   geom_errorbar(col="grey")+
   geom_errorbarh(col="grey")+
   geom_point()+
@@ -247,6 +257,8 @@ dplyr::select(b_est$summ_mu, median, lower, upper, model, ps_area) %>%
              x = median_LOG, xmin = lower_LOG, xmax = upper_LOG))+
   theme_bw(base_size = 20)+
   geom_abline(col = "red")+
+  geom_hline(yintercept = HT_mu)+
+  geom_vline(xintercept = HT_mu)+
   geom_errorbar(col="grey")+
   geom_errorbarh(col="grey")+
   geom_point()+
@@ -261,9 +273,12 @@ dplyr::select(b_est$summ_mu, median, lower, upper, model, ps_area) %>%
              x = median_LOG, xmin = lower_LOG, xmax = upper_LOG))+
   theme_bw(base_size = 20)+
   geom_abline(col = "red")+
+  geom_hline(yintercept = HT_mu)+
+  geom_vline(xintercept = HT_mu)+
   geom_errorbar(col="grey")+
   geom_errorbarh(col="grey")+
-  geom_point()+xlim(0,1)+ylim(0,1)+
+  geom_point()+
+  xlim(0,1)+ylim(0,1)+
   labs(y = "ELN model",
        x = "LOG model")
 if(export) jsave("scatter_ELNvsLOG.png", square = T)
@@ -364,6 +379,7 @@ mapping_data <- b_est$summ_mu %>%
     ggplot(aes(fill = median))+
     theme_void()+
     geom_sf(col = NA)+
+    geom_sf(data = state_overlay, aes(geometry = geometry), colour = "black", fill = NA)+
     facet_grid(.~model)+
     scale_fill_viridis_c(begin = 0.3, end = 1, 
                          direction = 1,
@@ -377,11 +393,12 @@ mapping_data <- b_est$summ_mu %>%
     ggplot(aes(fill = cisize))+
     theme_void()+
     geom_sf(col = NA)+
+    geom_sf(data = state_overlay, aes(geometry = geometry), colour = "black", fill = NA)+
     facet_grid(.~model)+
     scale_fill_viridis_c(begin = 0, end = 0.8, 
                          direction = -1,
                          option = "D")+
-    labs(fill = "HDI size")+
+    labs(fill = "Width of\nHDI")+
     theme(legend.position = "right", legend.key.height = unit(0.5, "cm"),
           strip.background = element_blank(),
           strip.text.x = element_blank()))
@@ -432,37 +449,39 @@ Fill.values <- c(-End, log(Breaks.fill), End)
 # Create base map for ORs
 (bm_or <- mapping_data %>%
     filter(model != "Direct") %>% 
-  ggplot(aes(fill = log(median)))+
-  theme_void()+
-  geom_sf(col = NA)+
-  facet_grid(.~model)+
-  scale_fill_gradientn(colors = Fill.colours,
-                       values = rescale(Fill.values),
-                       labels = as.character(round(Breaks.fill, 3)),
-                       breaks = log(Breaks.fill),
-                       limits = range(Fill.values))+
-  labs(fill = "OR")+
-  theme(legend.position = "right", legend.key.height = unit(0.4, "cm")))
+    ggplot(aes(fill = log(median)))+
+    theme_void()+
+    geom_sf(col = NA)+
+    geom_sf(data = state_overlay, aes(geometry = geometry), colour = "black", fill = NA)+
+    facet_grid(.~model)+
+    scale_fill_gradientn(colors = Fill.colours,
+                         values = rescale(Fill.values),
+                         labels = as.character(round(Breaks.fill, 3)),
+                         breaks = log(Breaks.fill),
+                         limits = range(Fill.values))+
+    labs(fill = "OR")+
+    theme(legend.position = "right", legend.key.height = unit(0.4, "cm")))
 
 # Create base map for cisize of ORs
 (bm_orci <- mapping_data %>%
     filter(model != "Direct") %>% 
-  ggplot(aes(fill = cisize))+
-  theme_void()+
-  geom_sf(col = NA)+
-  facet_grid(.~model)+
-  scale_fill_viridis_c(begin = 0, end = 0.8, 
-                       direction = -1,
-                       oob = squish, 
-                       limits = c(0.1, 63.7), 
-                       trans = "log",
-                       breaks = c(0,0.2,1,3,20),
-                       labels = as.character(c(0,0.2,1,3,20)),
-                       option = "D")+
-  labs(fill = "HDI size")+
-  theme(legend.position = "right", legend.key.height = unit(0.4, "cm"),
-        strip.background = element_blank(),
-        strip.text.x = element_blank()))
+    ggplot(aes(fill = cisize))+
+    theme_void()+
+    geom_sf(col = NA)+
+    geom_sf(data = state_overlay, aes(geometry = geometry), colour = "black", fill = NA)+
+    facet_grid(.~model)+
+    scale_fill_viridis_c(begin = 0, end = 0.8, 
+                         direction = -1,
+                         oob = squish, 
+                         limits = c(0.1, 63.7), 
+                         trans = "log",
+                         breaks = c(0,0.2,1,3,20),
+                         labels = as.character(c(0,0.2,1,3,20)),
+                         option = "D")+
+    labs(fill = "Width of\nHDI")+
+    theme(legend.position = "right", legend.key.height = unit(0.4, "cm"),
+          strip.background = element_blank(),
+          strip.text.x = element_blank()))
 
 # Maps: EPs for ORs #### ----------------------------------------------
 
@@ -482,6 +501,7 @@ mapping_data <- b_est$DPP_or %>%
     ggplot(aes(fill = EP))+
     theme_void()+
     geom_sf(col = NA)+
+    geom_sf(data = state_overlay, aes(geometry = geometry), colour = "black", fill = NA)+
     facet_grid(.~model)+
     scale_fill_distiller(palette = "PRGn",
                          limits = c(0.1,0.9),
