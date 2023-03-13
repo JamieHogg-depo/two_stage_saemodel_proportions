@@ -63,9 +63,9 @@ map_sa2 <- st_read("C:/r_proj/two_stage_saemodel_proportions/data/2016_SA2_Shape
   
 # get overlap
 state_overlay <- map_sa2 %>% 
+  mutate(state = str_sub(SA2, 1, 1)) %>% 
   group_by(state) %>% 
   summarise(geometry = st_union(geometry)) %>% 
-  filter(!is.na(state)) %>% 
   st_as_sf() %>%
   st_transform(4326)
 
