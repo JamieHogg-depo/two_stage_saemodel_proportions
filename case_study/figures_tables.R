@@ -299,6 +299,45 @@ lims <- data.frame(
   city = c("Brisbane", "Sydney", "Melbourne", "Perth", "Adelaide", "Hobart", "Canberra", "Darwin")
 )
 
+# Maps: Sample size of NHS #### ------------------------------------------------
+
+# create map data
+ss_map <- sample_agg %>% 
+  dplyr::select(ps_area, HT) %>% 
+  mutate(ss_dsc = ifelse(ps_area < 1263 & !is.na(HT), "Sample size > 10", "Sample size < 11"),
+         ss_dsc = ifelse(ps_area > 1262, "Nonsampled", ss_dsc),
+         ss_dsc = as.factor(ss_dsc)) %>% 
+  left_join(.,map_sa2, by = "ps_area") %>%
+  st_as_sf() %>%
+  st_transform(4326)
+
+# color scale for map
+ss_map_cols <- data.frame(model = c("Nonsampled", "Sample size < 11", "Sample size > 10"),
+                          color = c("#ffffff", "#808080", "#000000"))
+
+# Create map
+ss_pl <- ss_map %>% 
+  ggplot(aes(fill = ss_dsc))+
+  theme_void()+
+  geom_sf()+
+  scale_fill_manual(values = ss_map_cols$color,
+                    breaks = ss_map_cols$model)+
+  theme(legend.position = "right", legend.key.height = unit(0.5, "cm"))+
+  labs(fill = "")
+
+ss_pl
+if(export) jsave("ss_map.png", square = FALSE)
+
+# Subset to capital cities
+cities <- lims[c(1,2,3,7),]
+for(i in 1:nrow(cities)){
+  ss_pl +
+    xlim(cities$xmin[i], cities$xmax[i]) +
+    ylim(cities$ymin[i], cities$ymax[i]) +
+    ggtitle(label = cities$city[i])
+  jsave(paste0("map_insets/ss_map_", cities$city[i], ".png"), square = F)
+}
+
 # Maps: Prevalence #### --------------------------------------------------------
 # posterior medians (left)
 # size of CI (right)
@@ -321,6 +360,7 @@ mapping_data <- b_est$summ_mu %>%
 
 # Create base map for prevalence
 (bm_mu <- mapping_data %>% 
+    filter(model != "Direct") %>% 
     ggplot(aes(fill = median))+
     theme_void()+
     geom_sf(col = NA)+
@@ -333,6 +373,7 @@ mapping_data <- b_est$summ_mu %>%
 
 # Create base map for CI prevalence
 (bm_muci <- mapping_data %>% 
+    filter(model != "Direct") %>% 
     ggplot(aes(fill = cisize))+
     theme_void()+
     geom_sf(col = NA)+
@@ -390,6 +431,7 @@ Fill.values <- c(-End, log(Breaks.fill), End)
 
 # Create base map for ORs
 (bm_or <- mapping_data %>%
+    filter(model != "Direct") %>% 
   ggplot(aes(fill = log(median)))+
   theme_void()+
   geom_sf(col = NA)+
@@ -404,6 +446,7 @@ Fill.values <- c(-End, log(Breaks.fill), End)
 
 # Create base map for cisize of ORs
 (bm_orci <- mapping_data %>%
+    filter(model != "Direct") %>% 
   ggplot(aes(fill = cisize))+
   theme_void()+
   geom_sf(col = NA)+
@@ -435,18 +478,26 @@ mapping_data <- b_est$DPP_or %>%
 
 # Create base map for EPs
 (bm_ep <- mapping_data %>%
+    filter(model != "Direct") %>% 
     ggplot(aes(fill = EP))+
     theme_void()+
     geom_sf(col = NA)+
     facet_grid(.~model)+
-    scale_fill_viridis_c(begin = 0, end = 0.8,
-                         direction = -1,
-                         option = "C", 
+    scale_fill_distiller(palette = "PRGn",
                          limits = c(0.1,0.9),
+                         direction = -1,
                          oob = squish,
                          breaks = c(0,0.2,0.5,0.8,1),
                          labels = as.character(c(0,0.2,0.5,0.8,1)),
-                         trans = "logit")+
+                         trans = "logit") +
+    # scale_fill_viridis_c(begin = 0, end = 0.8,
+    #                      direction = -1,
+    #                      option = "C", 
+    #                      limits = c(0.1,0.9),
+    #                      oob = squish,
+    #                      breaks = c(0,0.2,0.5,0.8,1),
+    #                      labels = as.character(c(0,0.2,0.5,0.8,1)),
+    #                      trans = "logit")+
     labs(fill = "EP")+
     theme(legend.position = "right", legend.key.height = unit(0.4, "cm"),
           strip.background = element_blank(),
