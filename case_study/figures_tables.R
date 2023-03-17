@@ -135,6 +135,15 @@ mis_geos <- data.frame(SA2_MAIN16 = rep(temp$SA2_MAIN16, 4),
                        model = rep(c("TSLN", "LOG", "ELN", "Direct"), 67))
 rm(temp)
 
+# City Insets 
+lims <- data.frame(
+  xmin = c(152.6, 150.35, 144.5, 115.45, 138.1, 146.8, 148.6, 130.3),
+  xmax = c(153.6, 151.35, 145.5, 116.45, 139.1, 147.8, 149.6, 131.3),
+  ymin = -c(28, 34.4, 38.4, 32.5, 35.4, 43.4, 35.8, 13),
+  ymax = -c(27, 33.4, 37.4, 31.5, 34.4, 42.4, 34.8, 12),
+  city = c("Brisbane", "Sydney", "Melbourne", "Perth", "Adelaide", "Hobart", "Canberra", "Darwin")
+)
+
 ## PLOTS ## --------------------------------------------------------------------
 
 # SA4 level - HT vs modeled ####
@@ -304,16 +313,6 @@ b_est$summ_mu %>%
   theme(legend.position = "none")
 if(export) jsave("cat_prev_medianci.png", square = F)
 
-# City Insets #### -------------------------------------------------------------
-
-lims <- data.frame(
-  xmin = c(152.6, 150.35, 144.5, 115.45, 138.1, 146.8, 148.6, 130.3),
-  xmax = c(153.6, 151.35, 145.5, 116.45, 139.1, 147.8, 149.6, 131.3),
-  ymin = -c(28, 34.4, 38.4, 32.5, 35.4, 43.4, 35.8, 13),
-  ymax = -c(27, 33.4, 37.4, 31.5, 34.4, 42.4, 34.8, 12),
-  city = c("Brisbane", "Sydney", "Melbourne", "Perth", "Adelaide", "Hobart", "Canberra", "Darwin")
-)
-
 # Maps: Sample size of NHS #### ------------------------------------------------
 
 # create map data
@@ -337,7 +336,8 @@ ss_pl <- ss_map %>%
   geom_sf()+
   scale_fill_manual(values = ss_map_cols$color,
                     breaks = ss_map_cols$model)+
-  theme(legend.position = "right", legend.key.height = unit(0.5, "cm"))+
+  theme(legend.position = "bottom",legend.key.height = unit(0.5, "cm"))+
+  guides(fill = guide_legend(nrow = 3))+
   labs(fill = "")
 
 ss_pl
@@ -379,12 +379,13 @@ mapping_data <- b_est$summ_mu %>%
     ggplot(aes(fill = median))+
     theme_void()+
     geom_sf(col = NA)+
-    geom_sf(data = state_overlay, aes(geometry = geometry), colour = "black", fill = NA)+
+    geom_sf(data = state_overlay, aes(geometry = geometry), 
+            colour = "black", fill = NA, size = 0.3)+
     facet_grid(.~model)+
-    scale_fill_viridis_c(begin = 0.3, end = 1, 
-                         direction = 1,
+    scale_fill_viridis_c(begin = 0, end = 1, 
+                         direction = -1,
                          option = "B")+
-    labs(fill = "Prevalence")+
+    labs(fill = "Proportion")+
     theme(legend.position = "right", legend.key.height = unit(0.5, "cm")))
 
 # Create base map for CI prevalence
@@ -393,7 +394,8 @@ mapping_data <- b_est$summ_mu %>%
     ggplot(aes(fill = cisize))+
     theme_void()+
     geom_sf(col = NA)+
-    geom_sf(data = state_overlay, aes(geometry = geometry), colour = "black", fill = NA)+
+    geom_sf(data = state_overlay, aes(geometry = geometry), 
+            colour = "black", fill = NA, size = 0.3)+
     facet_grid(.~model)+
     scale_fill_viridis_c(begin = 0, end = 0.8, 
                          direction = -1,
@@ -419,7 +421,26 @@ for(i in 1:nrow(cities)){
     ylim(cities$ymin[i], cities$ymax[i])
   mu/muci
   jsave(paste0("map_insets/map_mu_", cities$city[i], ".png"), square = F)
+  message(paste0("City ", i, " (of ", nrow(cities), ")"))
 }
+
+# Brisbane, Sydney, Melbourne subset
+(bm_mu +
+  xlim(cities$xmin[1], cities$xmax[1]) +
+  ylim(cities$ymin[1], cities$ymax[1]) +
+  ggtitle(label = cities$city[1])+
+  theme(legend.position = "none"))/
+(bm_mu +
+   xlim(cities$xmin[2], cities$xmax[2]) +
+   ylim(cities$ymin[2], cities$ymax[2]) +
+   ggtitle(label = cities$city[2])+
+   theme(legend.position = "none"))/
+(bm_mu +
+   xlim(cities$xmin[3], cities$xmax[3]) +
+   ylim(cities$ymin[3], cities$ymax[3]) +
+   ggtitle(label = cities$city[3])+
+   theme(legend.position = "bottom", legend.key.width = unit(1, "cm")))
+if(export) jsave("map_muonly_BriSydMel.png")
 
 # Maps: ORs #### --------------------------------------------------------------
 
@@ -452,7 +473,8 @@ Fill.values <- c(-End, log(Breaks.fill), End)
     ggplot(aes(fill = log(median)))+
     theme_void()+
     geom_sf(col = NA)+
-    geom_sf(data = state_overlay, aes(geometry = geometry), colour = "black", fill = NA)+
+    geom_sf(data = state_overlay, aes(geometry = geometry), 
+            colour = "black", fill = NA, size = 0.3)+
     facet_grid(.~model)+
     scale_fill_gradientn(colors = Fill.colours,
                          values = rescale(Fill.values),
@@ -468,20 +490,47 @@ Fill.values <- c(-End, log(Breaks.fill), End)
     ggplot(aes(fill = cisize))+
     theme_void()+
     geom_sf(col = NA)+
-    geom_sf(data = state_overlay, aes(geometry = geometry), colour = "black", fill = NA)+
+    geom_sf(data = state_overlay, aes(geometry = geometry), 
+            colour = "black", fill = NA, size = 0.3)+
     facet_grid(.~model)+
-    scale_fill_viridis_c(begin = 0, end = 0.8, 
+    scale_fill_viridis_c(begin = 0, end = 1, 
                          direction = -1,
                          oob = squish, 
-                         limits = c(0.1, 63.7), 
-                         trans = "log",
-                         breaks = c(0,0.2,1,3,20),
-                         labels = as.character(c(0,0.2,1,3,20)),
+                         limits = c(0.01, 8.00), 
+                         #trans = "log",
+                         #breaks = c(0,0.2,1,3,20),
+                         #labels = as.character(c(0,0.2,1,3,20)),
                          option = "D")+
+    # scale_fill_viridis_c(begin = 0, end = 1, 
+    #                      direction = -1,
+    #                      oob = squish, 
+    #                      limits = c(0.1, 63.7), 
+    #                      trans = "log",
+    #                      breaks = c(0,0.2,1,3,20),
+    #                      labels = as.character(c(0,0.2,1,3,20)),
+    #                      option = "D")+
     labs(fill = "Width of\nHDI")+
     theme(legend.position = "right", legend.key.height = unit(0.4, "cm"),
           strip.background = element_blank(),
           strip.text.x = element_blank()))
+
+# Brisbane, Sydney, Melbourne subset
+(bm_or +
+  xlim(cities$xmin[1], cities$xmax[1]) +
+  ylim(cities$ymin[1], cities$ymax[1]) +
+  ggtitle(label = cities$city[1])+
+  theme(legend.position = "none"))/
+(bm_or +
+   xlim(cities$xmin[2], cities$xmax[2]) +
+   ylim(cities$ymin[2], cities$ymax[2]) +
+   ggtitle(label = cities$city[2])+
+   theme(legend.position = "none"))/
+(bm_or +
+   xlim(cities$xmin[3], cities$xmax[3]) +
+   ylim(cities$ymin[3], cities$ymax[3]) +
+   ggtitle(label = cities$city[3])+
+   theme(legend.position = "bottom", legend.key.width = unit(1, "cm")))
+if(export) jsave("map_oronly_BriSydMel.png")
 
 # Maps: EPs for ORs #### ----------------------------------------------
 
@@ -501,27 +550,19 @@ mapping_data <- b_est$DPP_or %>%
     ggplot(aes(fill = EP))+
     theme_void()+
     geom_sf(col = NA)+
-    geom_sf(data = state_overlay, aes(geometry = geometry), colour = "black", fill = NA)+
+    geom_sf(data = state_overlay, aes(geometry = geometry), 
+            colour = "black", fill = NA, size = 0.3)+
     facet_grid(.~model)+
     scale_fill_distiller(palette = "PRGn",
-                         limits = c(0.1,0.9),
+                         limits = c(-0.0000001,1.0000001),
                          direction = -1,
-                         oob = squish,
+                         #oob = squish,
+                         #trans = "logit",
                          breaks = c(0,0.2,0.5,0.8,1),
-                         labels = as.character(c(0,0.2,0.5,0.8,1)),
-                         trans = "logit") +
-    # scale_fill_viridis_c(begin = 0, end = 0.8,
-    #                      direction = -1,
-    #                      option = "C", 
-    #                      limits = c(0.1,0.9),
-    #                      oob = squish,
-    #                      breaks = c(0,0.2,0.5,0.8,1),
-    #                      labels = as.character(c(0,0.2,0.5,0.8,1)),
-    #                      trans = "logit")+
+                         labels = as.character(c(0,0.2,0.5,0.8,1))) +
     labs(fill = "EP")+
     theme(legend.position = "right", legend.key.height = unit(0.4, "cm"),
           strip.background = element_blank(),
-          #panel.background = element_rect(fill = 'lightblue', color = 'purple'),
           strip.text.x = element_blank()))
 
 # Export full maps
