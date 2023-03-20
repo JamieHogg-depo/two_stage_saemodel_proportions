@@ -318,7 +318,7 @@ if(export) jsave("cat_prev_medianci.png", square = F)
 # create map data
 ss_map <- sample_agg %>% 
   dplyr::select(ps_area, HT) %>% 
-  mutate(ss_dsc = ifelse(ps_area < 1263 & !is.na(HT), "Sample size > 10", "Sample size < 11"),
+  mutate(ss_dsc = ifelse(ps_area < 1263 & !is.na(HT), "Sample size > 10", "Sample size <= 10"),
          ss_dsc = ifelse(ps_area > 1262, "Nonsampled", ss_dsc),
          ss_dsc = as.factor(ss_dsc)) %>% 
   left_join(.,map_sa2, by = "ps_area") %>%
@@ -326,7 +326,7 @@ ss_map <- sample_agg %>%
   st_transform(4326)
 
 # color scale for map
-ss_map_cols <- data.frame(model = c("Nonsampled", "Sample size < 11", "Sample size > 10"),
+ss_map_cols <- data.frame(model = c("Nonsampled", "Sample size <= 10", "Sample size > 10"),
                           color = c("#ffffff", "#808080", "#000000"))
 
 # Create map

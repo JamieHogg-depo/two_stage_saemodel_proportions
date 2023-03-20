@@ -33,7 +33,7 @@ rename_w_tsln <- function(.data){
          model = ifelse(model == "HT_Direct", "HT", model))
 }
 
-## Table 2 - summary of simulated data ## --------------------------------------
+## Table 4 - summary of simulated data ## --------------------------------------
 
 # Create objects for table
 sr <- bind_rows(pr_all$SR, .id = "QaS") %>% 
@@ -83,7 +83,7 @@ list(nbar, insta, sr, samp_var_sm, bias_red, wcor, wols) %>%
          "Area sample size" = nbar) #%>% 
   #write_excel_csv(., file = paste0(loc_sheets, "/sr.csv"))
 
-## Table 3 - Bayesian MRRMSE and MARB, ci size and coverage ## -----------------
+## Table 5 - Bayesian MRRMSE and MARB, ci size and coverage ## -----------------
 
 # Get median 95 credible interval sizes
 post_sd <- bind_rows(pr_all$spm_pa, .id="QaS") %>% 
@@ -151,7 +151,7 @@ bind_rows(pr_all$spm_global, .id = "QaS") %>%
          Model = model) %>% 
   write_excel_csv(., file = paste0(loc_sheets, "/bay_metrics.csv"))
 
-## Table 4 - Frequentist MSE ## ------------------------------------------------
+## Table 1 (supplementary) - Frequentist MSE ##--------------------------------
 
 # create table
 bind_rows(sim_list$fp_global, .id = "QaS") %>% 
@@ -180,7 +180,7 @@ bind_rows(sim_list$fp_global, .id = "QaS") %>%
   arrange(Scenario, model) #%>% 
   #write_excel_csv(., file = paste0(loc_sheets, "/freq_mse.csv"))
 
-## Table 5 - Model parameters ## -----------------------------------------------
+## Table 2 (supplementary) - Model parameters ## ------------------------------
 
 bind_rows(sim_list$mpl, .id = "QaS") %>% 
   filter(!model %in% c("s1LN2", "s2LN2")) %>% 
@@ -194,7 +194,7 @@ bind_rows(sim_list$mpl, .id = "QaS") %>%
   rename(Scenario = QaS, Model = model) #%>% 
   #write_excel_csv(., file = paste0(loc_sheets, "/coefs.csv"))
 
-## Table 6 - Summaries of posterior medians of prevalences ## ------------------
+## Table 3 (NA) - Summaries of posterior medians of prevalences ## ------------
 
 bind_rows(pr_all$spm_pa, .id = "QaS") %>% 
   dplyr::select(contains(".median"), QaS) %>% 
