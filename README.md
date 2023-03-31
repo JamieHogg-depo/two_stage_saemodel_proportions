@@ -1,6 +1,6 @@
 # two_stage_saemodel_proportions
 
-This repository contains `R` and `stan` code for the analyses described in the manuscript "A Two-stage Bayesian method of Small Area Estimation for Proportions" by James Hogg and others.
+This repository contains `R` and `stan` code for the analyses described in the manuscript "A Two-stage Bayesian Small Area Estimation Method for Proportions" by James Hogg and others.
 
 ## Simulation Study
 
