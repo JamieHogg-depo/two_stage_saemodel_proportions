@@ -14,12 +14,18 @@ library(readr)
 library(ggtext)
 library(latex2exp)
 
-cur_date <- "20221129"
+setwd("C:/r_proj/two_stage_saemodel_proportions")
 
-pr_all <- readRDS(paste0("ResultsHPC/", cur_date, "/pr_all.rds"))
-sim_list <- readRDS(paste0("ResultsHPC/", cur_date, "/sim_list.rds"))
-loc_plots <- paste0("ResultsHPC/", cur_date, "/plots")
-loc_sheets <- paste0("ResultsHPC/", cur_date, "/sheets")
+#cur_date <- "20230201"
+
+# pr_all <- readRDS(paste0("ResultsHPC/", cur_date, "/pr_all.rds"))
+# sim_list <- readRDS(paste0("ResultsHPC/", cur_date, "/sim_list.rds"))
+# loc_plots <- paste0("ResultsHPC/", cur_date, "/plots")
+# loc_sheets <- paste0("ResultsHPC/", cur_date, "/sheets")
+pr_all <- readRDS("data/pr_all.rds")
+sim_list <- readRDS("data/sim_list.rds")
+loc_plots <- paste0("simulation_study/plots")
+loc_sheets <- paste0("simulation_study/sheets")
 
 ## Temporary renaming functions ## ---------------------------------------------
 
@@ -230,7 +236,35 @@ bind_rows(pr_all$spm_global, .id = "QaS") %>%
   theme(text=element_text(size=18), 
         axis.text.x = element_markdown(),
         legend.position = "null")
-#ggsave(paste0(loc_plots, "/MRRMSE.png"), width = 10, height = 8.35)
+ggsave(paste0(loc_plots, "/MRRMSE.png"), width = 10, height = 8.35)
+
+bind_rows(pr_all$spm_global, .id = "QaS") %>% 
+  filter_w_tsln() %>% rename_w_tsln() %>% 
+  rename(Scenario = QaS) %>% 
+  mutate(cl = as.factor(ifelse(model == "TSLN", 1, 0.8))) %>% 
+  mutate(missing = as.factor(ifelse(missing == FALSE, "Sampled areas", "Nonsampled areas")),
+         missing = fct_relevel(missing, "Sampled areas"),
+         Scenario = paste0("Sc", Scenario)) %>% 
+  # filter out BIN and Sc2, Sc4 and Sc6
+  filter(model != "BIN",
+         !Scenario %in% c("Sc2", "Sc4", "Sc6")) %>% 
+  mutate(Scenario = case_when(Scenario == "Sc1" ~ "50-50",
+                              Scenario == "Sc3" ~ "Rare",
+                              Scenario == "Sc5" ~ "Common")) %>% 
+  # create plot
+  ggplot(aes(y = RRMSE, x = model, fill = model, alpha = cl))+
+  geom_boxplot()+theme_bw()+
+  facet_grid(missing~Scenario, scales = "free_y")+
+  labs(title = "",
+       y = "Mean relative root mean square error (MRRMSE)",
+       x = "")+
+  scale_x_discrete(guide = guide_axis(angle = 90),
+                   labels = c("BETA", "ELN", "LOG", "**TSLN**"))+
+  scale_fill_discrete()+
+  theme(text=element_text(size=18), 
+        axis.text.x = element_markdown(),
+        legend.position = "null")
+ggsave(paste0(loc_plots, "/sparse_MRRMSE.png"), width = 10, height = 8.35)
 
 ## Figure 2 - MARB ## ----------------------------------------------------------
 
@@ -253,5 +287,33 @@ bind_rows(pr_all$spm_global, .id = "QaS") %>%
   theme(text=element_text(size=18),
         axis.text.x = element_markdown(),
         legend.position = "null")
-#ggsave(paste0(loc_plots, "/MARB_noBIN.png"), width = 10, height = 8.35)
+ggsave(paste0(loc_plots, "/MARB_noBIN.png"), width = 10, height = 8.35)
+
+bind_rows(pr_all$spm_global, .id = "QaS") %>% 
+  filter(model %in% c("BETA", "s2LN", "LOG", "ELN")) %>% 
+  mutate(model = ifelse(model == "s2LN", "TSLN", model)) %>% 
+  rename(Scenario = QaS) %>% 
+  mutate(cl = as.factor(ifelse(model == "TSLN", 1, 0.8))) %>% 
+  mutate(missing = as.factor(ifelse(missing == FALSE, "Sampled areas", "Nonsampled areas")),
+         missing = fct_relevel(missing, "Sampled areas"),
+         Scenario = paste0("Sc", Scenario)) %>%
+  # filter out BIN and Sc2, Sc4 and Sc6
+  filter(model != "BIN",
+         !Scenario %in% c("Sc2", "Sc4", "Sc6")) %>% 
+  mutate(Scenario = case_when(Scenario == "Sc1" ~ "50-50",
+                              Scenario == "Sc3" ~ "Rare",
+                              Scenario == "Sc5" ~ "Common")) %>% 
+  # create plot
+  ggplot(aes(y = ARB, x = model, fill = model, alpha = cl))+
+  geom_boxplot()+theme_bw()+
+  facet_grid(missing~Scenario)+
+  labs(title = "",
+       y = "Mean absolute relative bias (MARB)",
+       x = "")+
+  scale_x_discrete(guide = guide_axis(angle = 90),
+                   labels = c("BETA", "ELN", "LOG", "**TSLN**"))+
+  theme(text=element_text(size=18),
+        axis.text.x = element_markdown(),
+        legend.position = "null")
+ggsave(paste0(loc_plots, "/sparse_MARB_noBIN.png"), width = 10, height = 8.35)
 

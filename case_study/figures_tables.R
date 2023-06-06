@@ -95,6 +95,15 @@ irsd <- read_excel("C:/r_proj/two_stage_saemodel_proportions/data/irsd.xlsx") %>
 aux2 <- inner_join(ra, irsd, by = "SA2") %>% 
   left_join(.,b_est$area_concor, by = "SA2")
 
+# create shapefile
+b_est$summ_mu %>% 
+  filter(model == "TSLN") %>% 
+  left_join(.,map_sa2, by = "ps_area") %>% 
+  left_join(.,inner_join(ra, irsd, by = "SA2"), by = "SA2") %>% 
+  st_as_sf() %>%
+  st_transform(4326) %>% 
+  st_write(., "C:/r_proj/two_stage_saemodel_proportions/data/summ_mu_shapefile/summ_mu_shapefile.shp")
+
 ## Setup ## --------------------------------------------------------------------
 
 # Set HT and HT_mu

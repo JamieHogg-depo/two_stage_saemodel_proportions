@@ -1,3 +1,5 @@
 *.png
 data/
 *.zip
+*.xlsx
+*.csv
