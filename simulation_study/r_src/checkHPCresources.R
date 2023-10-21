@@ -1,7 +1,7 @@
 library(tidyverse)
 
 # Memory and time usage
-dt <- "202310150"
+dt <- "202310160"
 ff <- list.files(paste0("Z:/paper1/outputs/", dt, "/lyra_out"), full.names = T)
 ll <- list()
 for(i in 1:length(ff)){
@@ -17,11 +17,11 @@ bind_rows(ll) %>% view()
 # max 70 GB for 10 reps
 # max 70 GB for 20 reps
 # max 19.5 hours for 20 reps
-
-
+# max 83GB for 30 reps
+# max 30 hours for 30 reps
 
 # average round run time 
-dt <- "202310122"
+dt <- "202310150"
 ff <- list.files(paste0("Z:/paper1/outputs/", dt, "/lyra_errors"), full.names = T)
 ll <- list()
 for(i in 1:length(ff)){
