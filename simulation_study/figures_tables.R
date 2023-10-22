@@ -266,9 +266,25 @@ start_table6 %>%
 
 ## Table 2 (supplementary) - Model parameters ## ------------------------------
 
+# load data
 mpl <-  lapply(list.files("Z:/paper1/outputs/202310160/r/", pattern = "_mpl", full.names = T), readRDS)
 names(mpl) <- list.files("Z:/paper1/outputs/202310160/r/", pattern = "_mpl")
 
+# Full data
+ll <- list()
+for(i in c(1,6,11,16,21,26)){
+  ll[[i]] <- bind_rows(lapply(i:(i+4), FUN = function(x)bind_rows(mpl[[x]])))%>% 
+    group_by(i, .variable, model) %>% 
+    summarise(median = median(.value),
+              .groups = "drop") %>% 
+    mutate(parameter = ifelse(is.na(i), .variable, paste0(.variable, "[", i, "]"))) %>% 
+    dplyr::select(-c(i, .variable)) %>% 
+    relocate(model, parameter) %>% 
+    arrange(model, parameter)
+}
+mpl_full <- bind_rows(ll, .id = "QaS")
+
+# create table
 bind_rows(sim_list$mpl, .id = "QaS") %>% 
   filter(!model %in% c("s1LN2", "s2LN2")) %>% 
   mutate(model = ifelse(model == "s2LN", "TSLN-S2", model),
