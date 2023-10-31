@@ -3,3 +3,6 @@ data/
 *.zip
 *.xlsx
 *.csv
+*.tiff
+*.pdf
+*.eps
