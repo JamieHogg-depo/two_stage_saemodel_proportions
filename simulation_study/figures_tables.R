@@ -81,26 +81,30 @@ jsave <- function(filename, base_folder,
                   ratio = c(6,9),
                   dpi = 1000){
   if(square){
-    ggsave(filename = filename,
-           plot = plot,
-           path = base_folder,
-           dpi = dpi,
-           width = square_size,
-           height = square_size,
-           scale = scale,
-           units = "px")
+    for(sub in c(".png", ".tiff", ".pdf", ".eps")){
+      ggsave(filename = paste0(filename, sub),
+             plot = plot,
+             path = base_folder,
+             dpi = dpi,
+             width = square_size,
+             height = square_size,
+             scale = scale,
+             units = "px")
+    }
   }else{
     total = square_size^2
     a <- sqrt((total*ratio[1])/ratio[2])
     b <- (ratio[2]*a)/ratio[1]
-    ggsave(filename = filename,
-           plot = plot, 
-           path = base_folder,
-           dpi = dpi,
-           width = round(b),
-           height = round(a),
-           scale = scale,
-           units = "px")
+    for(sub in c(".png", ".tiff", ".pdf", ".eps")){
+      ggsave(filename = paste0(filename, sub),
+             plot = plot, 
+             path = base_folder,
+             dpi = dpi,
+             width = round(b),
+             height = round(a),
+             scale = scale,
+             units = "px")
+    }
   }
 }
 
@@ -373,28 +377,15 @@ spm_global %>%
   scale_x_discrete(guide = guide_axis(angle = 90),
                    labels = c("BETA", "BIN", "ELN", "LOG", "**TSLN**"))+
   scale_fill_discrete()+
-  theme(text=element_text(size=18), 
+  theme(text=element_text(size=13), 
         axis.text.x = element_markdown(),
         legend.position = "null")
-jsave(filename = "MRRMSE.png", 
+jsave(filename = "Figure_2", 
       base_folder = loc_plots,
       square = F,
-      scale = 2,
+      scale = 3,
       square_size = 1200,
-      dpi = 300)
-jsave(filename = "MRRMSE.tiff", 
-      base_folder = loc_plots,
-      square = F,
-      scale = 2,
-      square_size = 1200,
-      dpi = 300)
-jsave(filename = "MRRMSE.eps", 
-      base_folder = loc_plots,
-      square = F,
-      scale = 2,
-      square_size = 1200,
-      dpi = 300)
-#ggsave(paste0(loc_plots, "/MRRMSE.png"), width = 10, height = 8.35)
+      dpi = 600)
 
 spm_global %>% 
   #bind_rows(pr_all$spm_global, .id = "QaS") %>% 
@@ -420,28 +411,15 @@ spm_global %>%
   scale_x_discrete(guide = guide_axis(angle = 90),
                    labels = c("BETA", "ELN", "LOG", "**TSLN**"))+
   scale_fill_discrete()+
-  theme(text=element_text(size=18), 
+  theme(text=element_text(size=13), 
         axis.text.x = element_markdown(),
         legend.position = "null")
-jsave(filename = "sparse_MRRMSE.png", 
+jsave(filename = "sparse_MRRMSE", 
       base_folder = loc_plots,
       square = F,
-      scale = 2,
+      scale = 3,
       square_size = 1200,
-      dpi = 300)
-jsave(filename = "sparse_MRRMSE.tiff", 
-      base_folder = loc_plots,
-      square = F,
-      scale = 2,
-      square_size = 1200,
-      dpi = 300)
-jsave(filename = "sparse_MRRMSE.eps", 
-      base_folder = loc_plots,
-      square = F,
-      scale = 2,
-      square_size = 1200,
-      dpi = 300)
-#ggsave(paste0(loc_plots, "/sparse_MRRMSE.png"), width = 10, height = 8.35)
+      dpi = 600)
 
 ## Figure 2 - MARB ## ----------------------------------------------------------
 
@@ -462,28 +440,15 @@ spm_global %>%
        x = "")+
   scale_x_discrete(guide = guide_axis(angle = 90),
                    labels = c("BETA", "ELN", "LOG", "**TSLN**"))+
-  theme(text=element_text(size=18),
+  theme(text=element_text(size=13),
         axis.text.x = element_markdown(),
         legend.position = "null")
-jsave(filename = "MARB_noBIN.png", 
+jsave(filename = "Figure_3", 
       base_folder = loc_plots,
       square = F,
-      scale = 2,
+      scale = 3,
       square_size = 1200,
-      dpi = 300)
-jsave(filename = "MARB_noBIN.eps", 
-      base_folder = loc_plots,
-      square = F,
-      scale = 2,
-      square_size = 1200,
-      dpi = 300)
-jsave(filename = "MARB_noBIN.tiff", 
-      base_folder = loc_plots,
-      square = F,
-      scale = 2,
-      square_size = 1200,
-      dpi = 300)
-#ggsave(paste0(loc_plots, "/MARB_noBIN.png"), width = 10, height = 8.35)
+      dpi = 600)
 
 spm_global %>% 
   #bind_rows(pr_all$spm_global, .id = "QaS") %>% 
@@ -509,26 +474,13 @@ spm_global %>%
        x = "")+
   scale_x_discrete(guide = guide_axis(angle = 90),
                    labels = c("BETA", "ELN", "LOG", "**TSLN**"))+
-  theme(text=element_text(size=18),
+  theme(text=element_text(size=13),
         axis.text.x = element_markdown(),
         legend.position = "null")
-jsave(filename = "sparse_MARB_noBIN.png", 
+jsave(filename = "sparse_MARB_noBIN", 
       base_folder = loc_plots,
       square = F,
-      scale = 2,
+      scale = 3,
       square_size = 1200,
-      dpi = 300)
-jsave(filename = "sparse_MARB_noBIN.tiff", 
-      base_folder = loc_plots,
-      square = F,
-      scale = 2,
-      square_size = 1200,
-      dpi = 300)
-jsave(filename = "sparse_MARB_noBIN.eps", 
-      base_folder = loc_plots,
-      square = F,
-      scale = 2,
-      square_size = 1200,
-      dpi = 300)
-#ggsave(paste0(loc_plots, "/sparse_MARB_noBIN.png"), width = 10, height = 8.35)
+      dpi = 600)
 
