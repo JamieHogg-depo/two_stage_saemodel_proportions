@@ -17,6 +17,7 @@ library(latex2exp)
 setwd("C:/r_proj/two_stage_saemodel_proportions")
 
 #cur_date <- "20230201"
+cur_date <- "20231025"
 
 # pr_all <- readRDS(paste0("ResultsHPC/", cur_date, "/pr_all.rds"))
 # sim_list <- readRDS(paste0("ResultsHPC/", cur_date, "/sim_list.rds"))
@@ -24,21 +25,25 @@ setwd("C:/r_proj/two_stage_saemodel_proportions")
 # loc_sheets <- paste0("ResultsHPC/", cur_date, "/sheets")
 pr_all <- readRDS("data/pr_all.rds")
 sim_list <- readRDS("data/sim_list.rds")
-loc_plots <- paste0("simulation_study/plots")
+loc_plots <- paste0("simulation_study/plots/", cur_date, "/")
 loc_sheets <- paste0("simulation_study/sheets")
 
 # Load modeled results
-spm_pa <- readRDS("data/20231016/spm_pa.rds")
-spm_global <- readRDS("data/20231016/spm_global.rds")
-fp_global <- readRDS("data/20231016/fp_global.rds")
+spm_pa <- readRDS(paste0("data/", cur_date, "/spm_pa.rds"))
+spm_global <- readRDS(paste0("data/", cur_date, "/spm_global.rds"))
+fp_global <- readRDS(paste0("data/", cur_date, "/fp_global.rds"))
 
 # Load pr_all files
-pr <- lapply(list.files("Z:/paper1/outputs/202310160", pattern = "pr_all", full.names = T), readRDS)
-names(pr) <- list.files("Z:/paper1/outputs/202310160", pattern = "pr_all")
+pr <- lapply(list.files(paste0("Z:/paper1/outputs/", cur_date, "0"), pattern = "pr_all", full.names = T), readRDS)
+names(pr) <- list.files(paste0("Z:/paper1/outputs/", cur_date, "0"), pattern = "pr_all")
 
 # Load sim_list files
-sim_list <- lapply(list.files("Z:/paper1/outputs/202310160", pattern = "sim_list", full.names = T), readRDS)
-names(sim_list) <- list.files("Z:/paper1/outputs/202310160", pattern = "sim_list")
+sim_list <- lapply(list.files(paste0("Z:/paper1/outputs/", cur_date, "0"), pattern = "sim_list", full.names = T), readRDS)
+names(sim_list) <- list.files(paste0("Z:/paper1/outputs/", cur_date, "0"), pattern = "sim_list")
+
+# load data
+mpl <-  lapply(list.files(paste0("Z:/paper1/outputs/", cur_date, "0/r/"), pattern = "_mpl", full.names = T), readRDS)
+names(mpl) <- list.files(paste0("Z:/paper1/outputs/", cur_date, "0/r/"), pattern = "_mpl")
 
 ## Temporary renaming functions ## ---------------------------------------------
 
@@ -66,6 +71,37 @@ getMedIQR_aschar <- function(x, digits = 2, na.rm = TRUE){
   lower <- sprintf(unname(quantile(x, probs = 0.25, na.rm = na.rm)), fmt = fmt)
   upper <- sprintf(unname(quantile(x, probs = 0.75, na.rm = na.rm)), fmt = fmt)
   paste0(med, " (", lower, ", ", upper, ")")
+}
+
+jsave <- function(filename, base_folder, 
+                  plot = last_plot(), 
+                  square = T, 
+                  square_size = 5000,
+                  scale = 1,
+                  ratio = c(6,9),
+                  dpi = 1000){
+  if(square){
+    ggsave(filename = filename,
+           plot = plot,
+           path = base_folder,
+           dpi = dpi,
+           width = square_size,
+           height = square_size,
+           scale = scale,
+           units = "px")
+  }else{
+    total = square_size^2
+    a <- sqrt((total*ratio[1])/ratio[2])
+    b <- (ratio[2]*a)/ratio[1]
+    ggsave(filename = filename,
+           plot = plot, 
+           path = base_folder,
+           dpi = dpi,
+           width = round(b),
+           height = round(a),
+           scale = scale,
+           units = "px")
+  }
 }
 
 ## Table 4 - summary of simulated data ## --------------------------------------
@@ -101,7 +137,8 @@ list(insta, samp_var_sm, bias_red, wols) %>%
          "ALC" = Med_WOLSB,
          "Percent (%) increase in sampling variance" = Perc_increas_samp,
          "Percent (%) reduction in bias" = Med_bias_red) %>% 
-  write_excel_csv(., file = paste0(loc_sheets, "/sr.csv"))
+  knitr::kable(., "latex", booktabs = TRUE) #%>% 
+  #write_excel_csv(., file = paste0(loc_sheets, "/sr.csv"))
 
 ## Table 5 - Bayesian MRRMSE and MARB, ci size and coverage ## -----------------
 
@@ -161,8 +198,8 @@ spm_global %>%
   #bind_rows(pr_all$spm_global, .id = "QaS") %>% 
   filter_w_tsln() %>% rename_w_tsln() %>% 
   group_by(QaS, model, missing) %>% 
-  summarise(MRRMSE = round(median(RRMSE), 2),
-            MARB = round(median(ARB), 2), 
+  summarise(MRRMSE = median(RRMSE),
+            MARB = median(ARB), 
             .groups = "drop") %>% 
   arrange(QaS, missing, MRRMSE) %>% 
   pivot_wider(values_from = c(MARB, MRRMSE),
@@ -189,7 +226,8 @@ spm_global %>%
          Coverage_TRUE = sprintf(Coverage_TRUE, fmt = '%#.2f'),
          Scenario = paste0("Sc", Scenario)) %>% 
   dplyr::select(-contains("_rr")) %>% 
-  write_excel_csv(., file = paste0(loc_sheets, "/bay_metrics.csv"))
+  knitr::kable(., "latex", booktabs = TRUE)
+  #write_csv(., file = paste0(loc_sheets, "/bay_metrics.csv"))
 
 ## Table 6 - Frequentist MSE ##-------------------------------------------------
 
@@ -216,7 +254,7 @@ start_table4 <-spm_global %>%
 
 # start table
 start_table6 <- fp_global %>% 
-  filter_w_tsln() %>% 
+  #filter_w_tsln() %>% 
   arrange(QaS, missing, MSE) %>% 
   group_by(QaS, missing) %>% 
   mutate(id = 1:length(unique(model))) %>% 
@@ -225,7 +263,7 @@ start_table6 <- fp_global %>%
          Variance = 100*Variance,
          MSE = 100*MSE) %>% 
   dplyr::select(missing, model, Bias, Variance, QaS, MSE) %>% 
-  rename_w_tsln() %>% 
+  #rename_w_tsln() %>% 
   arrange(QaS, missing, model) %>% 
   mutate(Bias = round(Bias, digits =2),
          Variance = round(Variance, digits =2),
@@ -242,7 +280,7 @@ start_table6 <- fp_global %>%
             by = c("model", "Scenario" = "QaS"))
 
 # Get ratios
-rankIT <- function(x){paste0("(", sprintf(x/x[6], fmt = '%#.2f'), ")")}
+rankIT <- function(x){paste0("(", sprintf(x/x[8], fmt = '%#.2f'), ")")}
 ratios <- start_table6 %>% 
   dplyr::select(-contains("Coverage")) %>% 
   group_by(Scenario) %>%
@@ -256,19 +294,21 @@ start_table6 %>%
   dplyr::select(-contains(c("Bias", "Variance", "Coverage"))) %>%
   mutate(Scenario = paste0("Sc", Scenario)) %>% 
   dplyr::select(c("Scenario", "model",
-                  "MSE_FALSE", "BaselineMSE_FALSE", "Mcrpslogit_FALSE", "BaselineMcrpslogit_FALSE",
-                  "MSE_TRUE", "BaselineMSE_TRUE", "Mcrpslogit_TRUE", "BaselineMcrpslogit_TRUE")) %>% 
+                  "MSE_FALSE", "BaselineMSE_FALSE", 
+                  "MSE_TRUE", "BaselineMSE_TRUE")) %>% 
+  filter(!model %in% c("BINpp", "s1LN")) %>% 
+  rename_w_tsln() %>% 
   mutate(model = factor(model, levels = c("HT", "BETA", "BIN", "ELN", "LOG", "TSLN")))  %>% 
   group_by(model) %>% mutate(id = cur_group_id()) %>% ungroup() %>% 
   mutate(Scenario = ifelse(id == 1, Scenario, "")) %>% dplyr::select(-id) %>% 
   make_numeric_decimal() %>% 
-  setNames(str_remove_all(colnames(.), "_.*"))
+  mutate(MSE_FALSE = paste0(MSE_FALSE, " ", BaselineMSE_FALSE),
+         MSE_TRUE = paste0(MSE_TRUE, " ", BaselineMSE_TRUE)) %>% 
+  dplyr::select(c(1,2,3,5)) %>% 
+  setNames(str_remove_all(colnames(.), "_.*")) %>% 
+  knitr::kable(., "latex", booktabs = TRUE)
 
 ## Table 2 (supplementary) - Model parameters ## ------------------------------
-
-# load data
-mpl <-  lapply(list.files("Z:/paper1/outputs/202310160/r/", pattern = "_mpl", full.names = T), readRDS)
-names(mpl) <- list.files("Z:/paper1/outputs/202310160/r/", pattern = "_mpl")
 
 # Full data
 ll <- list()
@@ -285,7 +325,7 @@ for(i in c(1,6,11,16,21,26)){
 mpl_full <- bind_rows(ll, .id = "QaS")
 
 # create table
-bind_rows(sim_list$mpl, .id = "QaS") %>% 
+mpl_full %>% 
   filter(!model %in% c("s1LN2", "s2LN2")) %>% 
   mutate(model = ifelse(model == "s2LN", "TSLN-S2", model),
          model = ifelse(model == "s1LN", "TSLN-S1", model)) %>% 
@@ -294,7 +334,8 @@ bind_rows(sim_list$mpl, .id = "QaS") %>%
               values_from = median) %>% 
   relocate(QaS, model, `beta_u[1]`, `beta_u[2]`,
            `beta_u[3]`, `beta_u[4]`, `sigma_e`) %>% 
-  rename(Scenario = QaS, Model = model) #%>% 
+  rename(Scenario = QaS, Model = model)%>% 
+  knitr::kable(., "latex", booktabs = TRUE) #%>% 
   #write_excel_csv(., file = paste0(loc_sheets, "/coefs.csv"))
 
 ## Table 3 (NA) - Summaries of posterior medians of prevalences ## ------------
@@ -335,7 +376,25 @@ spm_global %>%
   theme(text=element_text(size=18), 
         axis.text.x = element_markdown(),
         legend.position = "null")
-ggsave(paste0(loc_plots, "/MRRMSE.png"), width = 10, height = 8.35)
+jsave(filename = "MRRMSE.png", 
+      base_folder = loc_plots,
+      square = F,
+      scale = 2,
+      square_size = 1200,
+      dpi = 300)
+jsave(filename = "MRRMSE.tiff", 
+      base_folder = loc_plots,
+      square = F,
+      scale = 2,
+      square_size = 1200,
+      dpi = 300)
+jsave(filename = "MRRMSE.eps", 
+      base_folder = loc_plots,
+      square = F,
+      scale = 2,
+      square_size = 1200,
+      dpi = 300)
+#ggsave(paste0(loc_plots, "/MRRMSE.png"), width = 10, height = 8.35)
 
 spm_global %>% 
   #bind_rows(pr_all$spm_global, .id = "QaS") %>% 
@@ -364,7 +423,25 @@ spm_global %>%
   theme(text=element_text(size=18), 
         axis.text.x = element_markdown(),
         legend.position = "null")
-ggsave(paste0(loc_plots, "/sparse_MRRMSE.png"), width = 10, height = 8.35)
+jsave(filename = "sparse_MRRMSE.png", 
+      base_folder = loc_plots,
+      square = F,
+      scale = 2,
+      square_size = 1200,
+      dpi = 300)
+jsave(filename = "sparse_MRRMSE.tiff", 
+      base_folder = loc_plots,
+      square = F,
+      scale = 2,
+      square_size = 1200,
+      dpi = 300)
+jsave(filename = "sparse_MRRMSE.eps", 
+      base_folder = loc_plots,
+      square = F,
+      scale = 2,
+      square_size = 1200,
+      dpi = 300)
+#ggsave(paste0(loc_plots, "/sparse_MRRMSE.png"), width = 10, height = 8.35)
 
 ## Figure 2 - MARB ## ----------------------------------------------------------
 
@@ -388,7 +465,25 @@ spm_global %>%
   theme(text=element_text(size=18),
         axis.text.x = element_markdown(),
         legend.position = "null")
-ggsave(paste0(loc_plots, "/MARB_noBIN.png"), width = 10, height = 8.35)
+jsave(filename = "MARB_noBIN.png", 
+      base_folder = loc_plots,
+      square = F,
+      scale = 2,
+      square_size = 1200,
+      dpi = 300)
+jsave(filename = "MARB_noBIN.eps", 
+      base_folder = loc_plots,
+      square = F,
+      scale = 2,
+      square_size = 1200,
+      dpi = 300)
+jsave(filename = "MARB_noBIN.tiff", 
+      base_folder = loc_plots,
+      square = F,
+      scale = 2,
+      square_size = 1200,
+      dpi = 300)
+#ggsave(paste0(loc_plots, "/MARB_noBIN.png"), width = 10, height = 8.35)
 
 spm_global %>% 
   #bind_rows(pr_all$spm_global, .id = "QaS") %>% 
@@ -417,5 +512,23 @@ spm_global %>%
   theme(text=element_text(size=18),
         axis.text.x = element_markdown(),
         legend.position = "null")
-ggsave(paste0(loc_plots, "/sparse_MARB_noBIN.png"), width = 10, height = 8.35)
+jsave(filename = "sparse_MARB_noBIN.png", 
+      base_folder = loc_plots,
+      square = F,
+      scale = 2,
+      square_size = 1200,
+      dpi = 300)
+jsave(filename = "sparse_MARB_noBIN.tiff", 
+      base_folder = loc_plots,
+      square = F,
+      scale = 2,
+      square_size = 1200,
+      dpi = 300)
+jsave(filename = "sparse_MARB_noBIN.eps", 
+      base_folder = loc_plots,
+      square = F,
+      scale = 2,
+      square_size = 1200,
+      dpi = 300)
+#ggsave(paste0(loc_plots, "/sparse_MARB_noBIN.png"), width = 10, height = 8.35)
 

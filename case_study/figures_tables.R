@@ -19,26 +19,38 @@ export <- TRUE
 
 source('C:/r_proj/two_stage_saemodel_proportions/case_study/functions_ALL.R')
 
-jsave <- function(filename, square = T, square_size = 5000, ratio = c(6,9)){
+jsave <- function(filename, base_folder, 
+                  plot = last_plot(), 
+                  square = T, 
+                  square_size = 5000,
+                  scale = 1,
+                  ratio = c(6,9),
+                  dpi = 1000){
   if(square){
-    ggsave(filename = filename,
+    for(sub in c(".png", ".tiff", ".pdf", ".eps")){
+    ggsave(filename = paste0(filename, sub),
+           plot = plot,
            path = base_folder,
-           dpi = 1000,
+           dpi = dpi,
            width = square_size,
            height = square_size,
-           scale = 1,
+           scale = scale,
            units = "px")
+    }
   }else{
     total = square_size^2
     a <- sqrt((total*ratio[1])/ratio[2])
     b <- (ratio[2]*a)/ratio[1]
-    ggsave(filename = filename,
+    for(sub in c(".png", ".tiff", ".pdf", ".eps")){
+    ggsave(filename = paste0(filename, sub),
+           plot = plot, 
            path = base_folder,
-           dpi = 1000,
+           dpi = dpi,
            width = round(b),
            height = round(a),
-           scale = 1,
+           scale = scale,
            units = "px")
+    }
   }
 }
 
@@ -164,8 +176,16 @@ b_est$summ_mu_sa4 %>%
   geom_point()+
   facet_grid(.~model)+
   labs(y = "Modelled prevalence estimate",
-       x = "Direct prevalence estimate")
-if(export) jsave("sa4_directvsmodeled.png", square = F)
+       x = "Direct prevalence estimate")+
+  theme(text=element_text(size=10))
+if(export){
+  jsave(filename = "sa4_directvsmodeled", 
+      base_folder = base_folder,
+      square = F,
+      scale = 2,
+      square_size = 1200,
+      dpi = 600)
+}
 
 # SA4 level - ARB, RRMSE #### 
 (b_est$summ_mu_sa4 %>% 
@@ -196,9 +216,17 @@ if(export) jsave("sa4_directvsmodeled.png", square = F)
      labs(y = "ARB (x10)", x = "", col = "",
           size = "Sample size")+
      theme(legend.position = "bottom",
-           legend.box = "vertical")+
+           legend.box = "vertical",
+           text=element_text(size=10))+
      scale_size_binned(n.breaks = 5))
-if(export) jsave("sa4_rrmse_arb.png", square = F)
+if(export){
+  jsave(filename = "sa4_rrmse_arb", 
+        base_folder = base_folder,
+        square = F,
+        scale = 2,
+        square_size = 1200,
+        dpi = 600)
+}
 
 # What about relative measures??
 
@@ -209,10 +237,18 @@ b_est$summ_mu %>%
   geom_violin()+
   labs(y = "",
        x = "Modeled prevalence estimate")+
-  theme(legend.position = "none")+
+  theme(legend.position = "none",
+        text=element_text(size=10))+
   scale_fill_manual(values = jcol$color,
                     breaks = jcol$model)
-if(export) jsave("violin.png", square = F)
+if(export){
+  jsave(filename = "violin", 
+        base_folder = base_folder,
+        square = F,
+        scale = 2,
+        square_size = 1200,
+        dpi = 600)
+}
 
 # Boxplot of posterior medians - IRSD ####
 prev_median_wide %>%
@@ -230,10 +266,18 @@ prev_median_wide %>%
   labs(x = "Modeled prevalence estimate",
        y = "IRSD deciles",
        fill = "")+
-  theme(legend.position = "bottom")+
+  theme(legend.position = "bottom",
+        text=element_text(size=10))+
   scale_fill_manual(values = jcol$color,
                     breaks = jcol$model)
-if(export) jsave("boxplot_byseifa.png", square = F)
+if(export){
+  jsave(filename = "boxplot_byseifa", 
+        base_folder = base_folder,
+        square = F,
+        scale = 2,
+        square_size = 1200,
+        dpi = 600)
+}
 
 # Boxplot of posterior medians - Remoteness ####
 prev_median_wide %>%
@@ -247,10 +291,18 @@ prev_median_wide %>%
   labs(x = "Modeled prevalence estimate",
        y = "",
        fill = "")+
-  theme(legend.position = "bottom")+
+  theme(legend.position = "bottom",
+        text=element_text(size=10))+
   scale_fill_manual(values = jcol$color,
                     breaks = jcol$model)
-if(export) jsave("boxplot_byremoteness.png", square = F)
+if(export){
+  jsave(filename = "boxplot_byremoteness", 
+        base_folder = base_folder,
+        square = F,
+        scale = 2,
+        square_size = 1200,
+        dpi = 600)
+}
 
 # Compare estimates from models ####
 dplyr::select(b_est$summ_mu, median, lower, upper, model, ps_area) %>% 
@@ -266,8 +318,16 @@ dplyr::select(b_est$summ_mu, median, lower, upper, model, ps_area) %>%
   geom_point()+
   xlim(0,1)+ylim(0,1)+
   labs(y = "TSLN model",
-       x = "ELN model")
-if(export) jsave("scatter_TSLNvsELN.png", square = T)
+       x = "ELN model")+
+  theme(text = element_text(size = 10))
+if(export){
+  jsave(filename = "Figure_6a", 
+        base_folder = base_folder,
+        square = T,
+        scale = 2,
+        square_size = 1200,
+        dpi = 600)
+}
 
 dplyr::select(b_est$summ_mu, median, lower, upper, model, ps_area) %>% 
   pivot_wider(names_from = model, values_from = c(median, lower, upper)) %>% 
@@ -282,8 +342,16 @@ dplyr::select(b_est$summ_mu, median, lower, upper, model, ps_area) %>%
   geom_point()+
   xlim(0,1)+ylim(0,1)+
   labs(y = "TSLN model",
-       x = "LOG model")
-if(export) jsave("scatter_TSLNvsLOG.png", square = T)
+       x = "LOG model")+
+  theme(text = element_text(size = 10))
+if(export){
+  jsave(filename = "Figure_6b", 
+        base_folder = base_folder,
+        square = T,
+        scale = 2,
+        square_size = 1200,
+        dpi = 600)
+}
 
 dplyr::select(b_est$summ_mu, median, lower, upper, model, ps_area) %>% 
   pivot_wider(names_from = model, values_from = c(median, lower, upper)) %>% 
@@ -298,8 +366,16 @@ dplyr::select(b_est$summ_mu, median, lower, upper, model, ps_area) %>%
   geom_point()+
   xlim(0,1)+ylim(0,1)+
   labs(y = "ELN model",
-       x = "LOG model")
-if(export) jsave("scatter_ELNvsLOG.png", square = T)
+       x = "LOG model")+
+  theme(text = element_text(size = 10))
+if(export){
+  jsave(filename = "Figure_6c", 
+        base_folder = base_folder,
+        square = T,
+        scale = 2,
+        square_size = 1200,
+        dpi = 600)
+}
 
 # Caterpillar plots - by model - with CI  #### ---------------------------------
 
@@ -319,8 +395,16 @@ b_est$summ_mu %>%
   geom_hline(yintercept = HT_mu)+
   labs(y = "Modeled prevalence estimates",
        x = "")+
-  theme(legend.position = "none")
-if(export) jsave("cat_prev_medianci.png", square = F)
+  theme(legend.position = "none",
+        text = element_text(size=10))
+if(export){
+  jsave(filename = "Figure_5", 
+        base_folder = base_folder,
+        square = F,
+        scale = 2,
+        square_size = 1200,
+        dpi = 600)
+}
 
 # Maps: Sample size of NHS #### ------------------------------------------------
 
@@ -342,15 +426,24 @@ ss_map_cols <- data.frame(model = c("Nonsampled", "Sample size <= 10", "Sample s
 ss_pl <- ss_map %>% 
   ggplot(aes(fill = ss_dsc))+
   theme_void()+
-  geom_sf()+
+  geom_sf(size = 0.2)+
   scale_fill_manual(values = ss_map_cols$color,
                     breaks = ss_map_cols$model)+
-  theme(legend.position = "bottom",legend.key.height = unit(0.5, "cm"))+
+  theme(legend.position = "bottom",
+        legend.key.height = unit(0.5, "cm"),
+        text=element_text(size=10))+
   guides(fill = guide_legend(nrow = 3))+
   labs(fill = "")
 
-ss_pl
-if(export) jsave("ss_map.png", square = FALSE)
+if(export){
+  jsave(filename = "Figure_4", 
+        plot = ss_pl,
+        base_folder = base_folder,
+        square = F,
+        scale = 2,
+        square_size = 1200,
+        dpi = 600)
+}
 
 # Subset to capital cities
 cities <- lims[c(1,2,3,7),]
@@ -359,7 +452,23 @@ for(i in 1:nrow(cities)){
     xlim(cities$xmin[i], cities$xmax[i]) +
     ylim(cities$ymin[i], cities$ymax[i]) +
     ggtitle(label = cities$city[i])
-  jsave(paste0("map_insets/ss_map_", cities$city[i], ".png"), square = F)
+  if(export){
+    if(i == 2){
+      jsave(filename = "map_insets/Figure_1", 
+            base_folder = base_folder,
+            square = F,
+            scale = 2,
+            square_size = 1200,
+            dpi = 600)
+    }else{
+      jsave(filename = paste0("map_insets/ss_map_", cities$city[i]), 
+            base_folder = base_folder,
+            square = F,
+            scale = 2,
+            square_size = 1200,
+            dpi = 600)
+    }
+  }
 }
 
 # Maps: Prevalence #### --------------------------------------------------------
@@ -416,7 +525,13 @@ mapping_data <- b_est$summ_mu %>%
 
 # Export full maps
 bm_mu/bm_muci
-if(export) jsave("map_mu.png")
+if(export){
+  jsave(filename = "map_mu", 
+        base_folder = base_folder,
+        scale = 2,
+        square_size = 1200,
+        dpi = 600)
+}
 
 # Subset to capital cities
 cities <- lims[c(1,2,3,7),]
@@ -429,7 +544,14 @@ for(i in 1:nrow(cities)){
     xlim(cities$xmin[i], cities$xmax[i]) +
     ylim(cities$ymin[i], cities$ymax[i])
   mu/muci
-  jsave(paste0("map_insets/map_mu_", cities$city[i], ".png"), square = F)
+  if(export){
+    jsave(filename = paste0("map_insets/map_mu_", cities$city[i]), 
+          base_folder = base_folder,
+          square = F,
+          scale = 2,
+          square_size = 1200,
+          dpi = 600)
+  }
   message(paste0("City ", i, " (of ", nrow(cities), ")"))
 }
 
@@ -449,7 +571,13 @@ for(i in 1:nrow(cities)){
    ylim(cities$ymin[3], cities$ymax[3]) +
    ggtitle(label = cities$city[3])+
    theme(legend.position = "bottom", legend.key.width = unit(1, "cm")))
-if(export) jsave("map_muonly_BriSydMel.png")
+if(export){
+  jsave(filename = "Figure_8", 
+        base_folder = base_folder,
+        scale = 2,
+        square_size = 1200,
+        dpi = 600)
+}
 
 # Maps: ORs #### --------------------------------------------------------------
 
@@ -539,7 +667,13 @@ Fill.values <- c(-End, log(Breaks.fill), End)
    ylim(cities$ymin[3], cities$ymax[3]) +
    ggtitle(label = cities$city[3])+
    theme(legend.position = "bottom", legend.key.width = unit(1, "cm")))
-if(export) jsave("map_oronly_BriSydMel.png")
+if(export){
+  jsave(filename = "map_oronly_BriSydMel", 
+        base_folder = base_folder,
+        scale = 2,
+        square_size = 1200,
+        dpi = 600)
+}
 
 # Maps: EPs for ORs #### ----------------------------------------------
 
@@ -576,23 +710,39 @@ mapping_data <- b_est$DPP_or %>%
 
 # Export full maps
 bm_or/bm_ep/bm_orci
-if(export) jsave("map_or.png")
+if(export){
+  jsave(filename = "Figure_7", 
+        base_folder = base_folder,
+        scale = 2,
+        square_size = 1200,
+        dpi = 600)
+}
 
 # Subset to capital cities
 cities <- lims[c(1,2,3,7),]
 for(i in 1:nrow(cities)){
   or <- bm_or +
+    theme(text = element_text(size = 6))+
     xlim(cities$xmin[i], cities$xmax[i]) +
     ylim(cities$ymin[i], cities$ymax[i]) +
     ggtitle(label = cities$city[i])
   orci <- bm_orci +
+    theme(text = element_text(size = 6))+
     xlim(cities$xmin[i], cities$xmax[i]) +
     ylim(cities$ymin[i], cities$ymax[i])
   orep <- bm_ep +
+    theme(text = element_text(size = 6))+
     xlim(cities$xmin[i], cities$xmax[i]) +
     ylim(cities$ymin[i], cities$ymax[i])
   (or/orep/orci)
-  jsave(paste0("map_insets/map_or_", cities$city[i], ".png"), square = F)
+  if(export){
+    jsave(filename = paste0("map_insets/map_or_", cities$city[i]), 
+          base_folder = base_folder,
+          square = F,
+          scale = 2,
+          square_size = 1200,
+          dpi = 600)
+  }
   message(paste0("City ", i, " (of ", nrow(cities), ")"))
 }
 
