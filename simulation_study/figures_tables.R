@@ -33,17 +33,18 @@ spm_pa <- readRDS(paste0("data/", cur_date, "/spm_pa.rds"))
 spm_global <- readRDS(paste0("data/", cur_date, "/spm_global.rds"))
 fp_global <- readRDS(paste0("data/", cur_date, "/fp_global.rds"))
 
-# Load pr_all files
-pr <- lapply(list.files(paste0("Z:/paper1/outputs/", cur_date, "0"), pattern = "pr_all", full.names = T), readRDS)
-names(pr) <- list.files(paste0("Z:/paper1/outputs/", cur_date, "0"), pattern = "pr_all")
-
-# Load sim_list files
-sim_list <- lapply(list.files(paste0("Z:/paper1/outputs/", cur_date, "0"), pattern = "sim_list", full.names = T), readRDS)
-names(sim_list) <- list.files(paste0("Z:/paper1/outputs/", cur_date, "0"), pattern = "sim_list")
-
-# load data
-mpl <-  lapply(list.files(paste0("Z:/paper1/outputs/", cur_date, "0/r/"), pattern = "_mpl", full.names = T), readRDS)
-names(mpl) <- list.files(paste0("Z:/paper1/outputs/", cur_date, "0/r/"), pattern = "_mpl")
+## NOTE: Check VPN Status ## ---------------------------------------------------
+# # Load pr_all files
+# pr <- lapply(list.files(paste0("Z:/paper1/outputs/", cur_date, "0"), pattern = "pr_all", full.names = T), readRDS)
+# names(pr) <- list.files(paste0("Z:/paper1/outputs/", cur_date, "0"), pattern = "pr_all")
+# 
+# # Load sim_list files
+# sim_list <- lapply(list.files(paste0("Z:/paper1/outputs/", cur_date, "0"), pattern = "sim_list", full.names = T), readRDS)
+# names(sim_list) <- list.files(paste0("Z:/paper1/outputs/", cur_date, "0"), pattern = "sim_list")
+# 
+# # load data
+# mpl <-  lapply(list.files(paste0("Z:/paper1/outputs/", cur_date, "0/r/"), pattern = "_mpl", full.names = T), readRDS)
+# names(mpl) <- list.files(paste0("Z:/paper1/outputs/", cur_date, "0/r/"), pattern = "_mpl")
 
 ## Temporary renaming functions ## ---------------------------------------------
 
