@@ -401,7 +401,8 @@ spm_global %>%
          !Scenario %in% c("Sc2", "Sc4", "Sc6")) %>% 
   mutate(Scenario = case_when(Scenario == "Sc1" ~ "50-50",
                               Scenario == "Sc3" ~ "Rare",
-                              Scenario == "Sc5" ~ "Common")) %>% 
+                              Scenario == "Sc5" ~ "Common"),
+         Scenario = fct_relevel(Scenario, c("Rare", "50-50"))) %>% 
   # create plot
   ggplot(aes(y = RRMSE, x = model, fill = model, alpha = cl))+
   geom_boxplot()+theme_bw()+
