@@ -1,6 +1,6 @@
 # A Two-Stage Bayesian Small Area Estimation Approach for Proportions
 
-This repository contains `R` and `stan` code for the analyses described in the manuscript "A Two-Stage Bayesian Small Area Estimation Approach for Proportions" by James Hogg, Jessica Cameron, Susanna Cramb, Peter Baade, and Kerrie Mengersen. The published article is available [here]([https://arxiv.org/abs/2306.11302](https://onlinelibrary.wiley.com/doi/full/10.1111/insr.12572). 
+This repository contains `R` and `stan` code for the analyses described in the manuscript "A Two-Stage Bayesian Small Area Estimation Approach for Proportions" by James Hogg, Jessica Cameron, Susanna Cramb, Peter Baade, and Kerrie Mengersen. The published article is available [here](https://onlinelibrary.wiley.com/doi/full/10.1111/insr.12572). 
 
 ## Simulation Study
 
